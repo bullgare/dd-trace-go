@@ -451,16 +451,21 @@ func TestTracerSpanGlobalTags(t *testing.T) {
 	assert.Equal("value", child.Meta["key"])
 }
 
-func TestTracerNoDebugStack(t *testing.T) {
+func TestTracerNoDebugStackFinish(t *testing.T) {
 	assert := assert.New(t)
 	tracer := newTracer(WithDebugStack(false))
 	s := tracer.StartSpan("web.request").(*span)
 	err := errors.New("test error")
 	s.Finish(WithError(err))
+	assert.Empty(s.Meta[ext.ErrorStack])
+}
 
-	assert.Equal(int32(1), s.Error)
-	assert.Equal("test error", s.Meta[ext.ErrorMsg])
-	assert.Equal("*errors.errorString", s.Meta[ext.ErrorType])
+func TestTracerNoDebugStackFinishSetTag(t *testing.T) {
+	assert := assert.New(t)
+	tracer := newTracer(WithDebugStack(false))
+	s := tracer.StartSpan("web.request").(*span)
+	err := errors.New("error value with no trace")
+	s.SetTag(ext.Error, err)
 	assert.Empty(s.Meta[ext.ErrorStack])
 }
 
